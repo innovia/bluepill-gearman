@@ -5,12 +5,12 @@ require "bluepill"
 module Bluepill
   module Nagios
     class Notifier < Bluepill::Trigger
-      def initialize(process, options)
+      def initialize(process, options={})
         @default_args = {
-          nscahost: options[:nscahost],
-          port: options[:port]||5667,
-          hostname: options[:host]||`hostname -f`.chomp,
-          service: options[:service]||process.name
+          :nscahost => options.delete(:nscahost),
+          :port => options.delete(:port) || 5667,
+          :hostname => options.delete(:host) || `hostname -f`.chomp,
+          :service => options.delete(:service) || process.name
         }
         super
       end
