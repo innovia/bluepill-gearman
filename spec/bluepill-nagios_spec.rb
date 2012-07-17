@@ -9,14 +9,14 @@ describe Bluepill::Nagios::Notifier do
 
   it "should create a default_args instance variable to store default connection parameters" do
     process.expect(:name, 'my_process')
-    notifier.instance_variable_get(:@default_args).must_equal({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 0})
+    notifier.instance_variable_get(:@default_args).must_equal({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process'})
   end
 
   it "should notify nagios of a critical error via send_nsca when a transition to down occurs" do
     process.expect(:name, 'my_process')
     transition = Minitest::Mock.new
     transition.expect(:to_name,:down)
-    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 0, status: 2})
+    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 2, status: "Bluepill reported process down at #{Time.now}"})
     notifier.notify(transition)
   end
 
@@ -24,7 +24,7 @@ describe Bluepill::Nagios::Notifier do
     process.expect(:name, 'my_process')
     transition = Minitest::Mock.new
     transition.expect(:to_name,:unmonitored)
-    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 0, status: 1})
+    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 1, status: "Bluepill stopped monitoring at #{Time.now}"})
     notifier.notify(transition)
   end
 
@@ -32,7 +32,7 @@ describe Bluepill::Nagios::Notifier do
     process.expect(:name, 'my_process')
     transition = Minitest::Mock.new
     transition.expect(:to_name,:up)
-    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 0, status: 0})
+    notifier.expects(:send_nsca).with({nscahost: 'remotehost', port: 5667, hostname: 'localhost', service: 'my_process', return_code: 0, status: "Running"})
     notifier.notify(transition)
   end
 end

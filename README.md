@@ -18,7 +18,29 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Require the bluepill-nagios gem and add a check named :notifier in your pill configuration file.
+
+Available options are:
+* nscahost: the host where you want to send your events
+* port: the port where nsca daemon is listening (default: 5667)
+* hostname: the host defined in your nagios configuration (default: hostname -f)
+* service: the service name defined in the nagios configuration (default: bluepill configuration process name)
+
+Example:
+
+```
+require 'bluepill-nagios'
+Bluepill.application("test") do |app|
+  app.process("test") do |process|
+    process.start_command = "bundle exec ./test.rb"
+    process.pid_file = "/var/run/test.pid"
+    process.daemonize = true
+    process.checks :notifier, :nscahost => 'my.nagios.host'
+  end
+end
+```
+
+Don't forget to set up the nsca daemon on the remote host.
 
 ## Contributing
 

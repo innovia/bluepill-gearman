@@ -10,25 +10,25 @@ module Bluepill
           nscahost: options[:nscahost],
           port: options[:port]||5667,
           hostname: options[:host]||`hostname -f`,
-          service: process.name,
-          return_code: 0
+          service: options[:service]||process.name
         }
         super
       end
       def notify(transition)
-        status = nil
-        case transition.to_name
+        _return_code, _status = case transition.to_name
         when :down
-          status = 2 
+          [2, "Bluepill reported process down at #{Time.now}"]
         when :unmonitored
-          status = 1 
+          [1 , "Bluepill stopped monitoring at #{Time.now}"]
         when :up
-          status = 0 
+          [0 , "Running"]
+        else
+          [nil, nil]
         end
-        if status
-          args = @default_args.merge({:status => status})
+        if _status and _return_code
+          _args = @default_args.merge({:status => _status, :return_code => _return_code})
+          send_nsca(_args)
         end
-        send_nsca(args) if status
       end
 
       def send_nsca(args)
