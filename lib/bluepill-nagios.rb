@@ -9,7 +9,7 @@ module Bluepill
         @default_args = {
           nscahost: options[:nscahost],
           port: options[:port]||5667,
-          hostname: options[:host]||`hostname -f`,
+          hostname: options[:host]||`hostname -f`.chomp,
           service: options[:service]||process.name
         }
         super
@@ -32,8 +32,13 @@ module Bluepill
       end
 
       def send_nsca(args)
-        nsca_connection = SendNsca::NscaConnection.new(args)
-        nsca_connection.send_nsca 
+        begin
+          nsca_connection = SendNsca::NscaConnection.new(args)
+          nsca_connection.send_nsca 
+          logger.debug("nsca server notified") if logger
+        rescue => e
+          logger.warning("failed to reach the nsca server: #{e}") if logger 
+        end
       end
     end
   end
