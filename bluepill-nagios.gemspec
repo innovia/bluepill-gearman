@@ -17,6 +17,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "send_nsca"
   gem.add_development_dependency "minitest"
   gem.add_development_dependency "mocha"
+  gem.add_development_dependency "yard"
+  gem.add_development_dependency "redcarpet"
   gem.test_files = Dir.glob('spec/*_spec.rb')
   gem.version       = Bluepill::Nagios::VERSION
 end

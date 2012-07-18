@@ -35,7 +35,7 @@ Bluepill.application("test") do |app|
     process.start_command = "bundle exec ./test.rb"
     process.pid_file = "/var/run/test.pid"
     process.daemonize = true
-    process.checks :notifier, :nscahost => 'my.nagios.host'
+    process.checks :nsca, :nscahost => 'my.nagios.host'
   end
 end
 ```

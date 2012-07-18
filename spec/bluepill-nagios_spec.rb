@@ -3,9 +3,9 @@ require 'minitest/autorun'
 require 'mocha'
 require './lib/bluepill-nagios'
 
-describe Bluepill::Nagios::Notifier do
+describe Bluepill::Nagios::Nsca do
   let(:process) { Minitest::Mock.new }
-  let(:notifier) {Bluepill::Nagios::Notifier.new(process, {:nscahost => 'remotehost', :host => 'localhost'})}
+  let(:notifier) {Bluepill::Nagios::Nsca.new(process, {:nscahost => 'remotehost', :host => 'localhost'})}
 
   it "should create a default_args instance variable to store default connection parameters" do
     process.expect(:name, 'my_process')
