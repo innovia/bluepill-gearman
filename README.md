@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-Require the bluepill-nagios gem and add a check named :notifier in your pill configuration file.
+Require the bluepill-nagios gem and add a check named :nsca in your pill configuration file.
 
 Available options are:
 * nscahost: the host where you want to send your events
