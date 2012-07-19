@@ -49,7 +49,7 @@ module Bluepill
           nsca_connection = SendNsca::NscaConnection.new(args)
           nsca_connection.send_nsca 
           logger.debug("nsca server notified") if logger
-        rescue => e
+        rescue Exception => e
           logger.warning("failed to reach the nsca server: #{e}") if logger 
         end
       end
