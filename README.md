@@ -1,12 +1,12 @@
 # Bluepill::Nagios
 
-Send bluepill events to nagios via nsca
+Send bluepill events to gearman server via send gearman
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'bluepill-nagios'
+    gem 'bluepill-nagios', 
 
 And then execute:
 
@@ -18,13 +18,14 @@ Or install it yourself as:
 
 ## Usage
 
-Require the bluepill-nagios gem and add a check named :nsca in your pill configuration file.
+Require the bluepill-nagios gem and add a check named :gearman in your pill configuration file.
 
 Available options are:
-* nscahost: the host where you want to send your events
-* port: the port where nsca daemon is listening (default: 5667)
+* gearman_server: the gearman server where you want to send your passive checks
+* port: the port where nsca daemon is listening (default: 4730)
 * hostname: the host defined in your nagios configuration (default: hostname -f)
 * service: the service name defined in the nagios configuration (default: bluepill configuration process name)
+* queue: the queue name to process the jobs (default: check_results)
 
 Example:
 
@@ -35,12 +36,10 @@ Bluepill.application("test") do |app|
     process.start_command = "bundle exec ./test.rb"
     process.pid_file = "/var/run/test.pid"
     process.daemonize = true
-    process.checks :nsca, :nscahost => 'my.nagios.host'
+    process.checks :gearman, :gearman_server => 'my.gearman.server'
   end
 end
 ```
-
-Don't forget to set up the nsca daemon on the remote host.
 
 ## Contributing
 

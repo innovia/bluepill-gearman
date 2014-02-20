@@ -1,23 +1,29 @@
 require "bluepill-nagios/version"
-require "send_nsca"
+require 'gearman'
 require "bluepill"
+require 'base64'
 
 module Bluepill
   module Nagios
-    class Nsca < Bluepill::Trigger
-      # Called by bluepill when a "checks :nsca" is declared in pill file
-      # @param [Bluepill::Process] process object from Bluepill see http://rdoc.info/github/arya/bluepill/master/Bluepill/Process
-      # @param [Hash] options available options:
-      #   * nscahost: the host hosting the nsca daemon. mandatory
-      #   * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
-      #   * service: the service declared in nagios (default: the bluepill process name)
-      #   See checks https://github.com/arya/bluepill for the syntax to pass those options
+    class SendGearman < Bluepill::Trigger
+      <<-INFO
+        Called by bluepill when a "checks :gearman" is declared in pill file
+        @param [Bluepill::Process] process object from Bluepill see http://rdoc.info/github/arya/bluepill/master/Bluepill/Process
+        @param [Hash] options available options:
+          * gearman_server: the Gearman Server. mandatory
+          * gearman_port: the gearman server port or default to 4730
+          * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
+          * service: the service declared in nagios (default: the bluepill process name)
+          * queue: default queue is 'check_results'
+          See checks https://github.com/arya/bluepill for the syntax to pass those options
+      INFO
+
       def initialize(process, options={})
         @default_args = {
-          :nscahost => options.delete(:nscahost),
-          :port => options.delete(:port) || 5667,
-          :hostname => options.delete(:host) || `hostname -f`.chomp,
-          :service => options.delete(:service) || process.name
+          :gearman_server => ["#{options.delete(:gearman_server)}:#{options.delete(:gearman_port) || 4730}"],
+          :host => options.delete(:host) || `hostname -f`.chomp,
+          :service => options.delete(:service) || process.name,
+          :queue => options.delete(:queue) || 'check_results'
         }
         super
       end
@@ -39,18 +45,33 @@ module Bluepill
         end
         if _status and _return_code
           _args = @default_args.merge({:status => _status, :return_code => _return_code})
-          send_nsca(_args)
+          send_gearman(_args)
         end
       end
 
       protected
-      def send_nsca(args)
+      def send_gearman(args)
         begin
-          nsca_connection = SendNsca::NscaConnection.new(args)
-          nsca_connection.send_nsca 
-          logger.debug("nsca server notified") if logger
+          client  = Gearman::Client.new(args[:gearman_server])
+          taskset = Gearman::TaskSet.new(client)
+          job = <<-EOT
+type=passive
+host_name=#{args[:host]}
+service_description=#{args[:service]}
+start_time=#{Time.now.to_i}.0
+finish_time=#{Time.now.to_i}.0
+latency=0.0
+return_code=#{args[:return_code]}
+output=#{args[:status]}
+EOT
+
+          encoded_job = Base64.encode64(job)
+          task = Gearman::Task.new(args[:queue], encoded_job)
+          result = taskset.add_task(task)
+
+          logger.debug("Sent Job to Gearman Server: #{result}") if logger
         rescue Exception => e
-          logger.warning("failed to reach the nsca server: #{e}") if logger 
+          logger.warning("Failed to send job to the Gearman Server: #{e}") if logger 
         end
       end
     end
