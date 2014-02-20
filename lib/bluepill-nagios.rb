@@ -5,7 +5,7 @@ require 'base64'
 
 module Bluepill
   module Nagios
-    class SendGearman < Bluepill::Trigger
+    class Gearman < Bluepill::Trigger
       <<-INFO
         Called by bluepill when a "checks :gearman" is declared in pill file
         @param [Bluepill::Process] process object from Bluepill see http://rdoc.info/github/arya/bluepill/master/Bluepill/Process
