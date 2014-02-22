@@ -49,7 +49,7 @@ module Bluepill
         end
       end
 
-      protected
+    protected
       def send_gearman(args)
         begin
           client  = Gearman::Client.new(args[:gearman_server])
@@ -64,16 +64,17 @@ latency=0.0
 return_code=#{args[:return_code]}
 output=#{args[:status]}
 EOT
-
           encoded_job = Base64.encode64(job)
           task = Gearman::Task.new(args[:queue], encoded_job)
+          task.on_complete {|d| puts "completed task: #{d}" }
+
           result = taskset.add_task(task)
 
-          logger.debug("Sent Job to Gearman Server: #{result}") if logger
-        rescue Exception => e
-          logger.warning("Failed to send job to the Gearman Server: #{e}") if logger 
-        end
-      end
+          puts("Sent Job to Gearman Server: #{result}")
+          rescue Exception => e
+            puts ("Failed to send job to the Gearman Server: #{e}")
+          end
+      end 
     end
   end
 end
