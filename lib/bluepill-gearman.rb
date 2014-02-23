@@ -1,11 +1,11 @@
-require "bluepill-nagios/version"
+require "bluepill-gearman/version"
 require 'gearman'
 require "bluepill"
 require 'base64'
 
 module Bluepill
-  module Nagios
-    class Send_Gearman < Bluepill::Trigger
+  module Gearman
+    class SendGearman < Bluepill::Trigger
       <<-INFO
         Called by bluepill when a "checks :send_gearman" is declared in pill file
         @param [Bluepill::Process] process object from Bluepill see http://rdoc.info/github/arya/bluepill/master/Bluepill/Process
@@ -15,6 +15,8 @@ module Bluepill
           * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
+          * encryption: true/false, default to false
+          * key: A key 16, 24, or 32 bytes length
           See checks https://github.com/arya/bluepill for the syntax to pass those options
       INFO
 
@@ -23,7 +25,9 @@ module Bluepill
           :gearman_server => ["#{options.delete(:gearman_server)}:#{options.delete(:gearman_port) || 4730}"],
           :host => options.delete(:host) || `hostname -f`.chomp,
           :service => options.delete(:service) || process.name,
-          :queue => options.delete(:queue) || 'check_results'
+          :queue => options.delete(:queue) || 'check_results',
+          :encryption => options.delete(:encryption) || false,
+          :key => options.delete(:key) || ''
         }
         super
       end
@@ -64,11 +68,17 @@ latency=0.0
 return_code=#{args[:return_code]}
 output=#{args[:status]}
 EOT
+          # if args[:encryption]
+          #   begin
+          #     rijndael = Crypt::Rijndael.new(args[:key])
+          #     job = rijndael.encrypt_block(job)
+          #   rescue Exception => e
+          #     logger.debug("unable to encrypt job: #{e}")
+          #   end
+          # end
           logger.debug "sending job: #{job}"
           encoded_job = Base64.encode64(job)
-          task = Gearman::Task.new(args[:queue], encoded_job)
-          task.on_complete {|d| puts "completed task: #{d}" }
-
+          task = Gearman::Task.new(args[:queue], encoded_job) 
           result = taskset.add_task(task)
 
           logger.info "Sent Job to Gearman Server: #{result}"

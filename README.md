@@ -1,4 +1,4 @@
-# Bluepill::Nagios
+# Bluepill::Gearman
 
 Send bluepill events to gearman server via send gearman
 
@@ -6,7 +6,7 @@ Send bluepill events to gearman server via send gearman
 
 Add this line to your application's Gemfile:
 
-    gem 'bluepill-nagios', 
+    gem 'bluepill-gearman', 
 
 And then execute:
 
@@ -14,11 +14,11 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install bluepill-nagios
+    $ gem install bluepill-gearman
 
 ## Usage
 
-Require the bluepill-nagios gem and add a check named :gearman in your pill configuration file.
+Require the bluepill-gearman gem and add a check named :gearman in your pill configuration file.
 
 Available options are:
 * gearman_server: the gearman server where you want to send your passive checks
@@ -30,7 +30,7 @@ Available options are:
 Example:
 
 ```
-require 'bluepill-nagios'
+require 'bluepill-gearman'
 Bluepill.application("test") do |app|
   app.process("test") do |process|
     process.start_command = "bundle exec ./test.rb"
@@ -40,6 +40,9 @@ Bluepill.application("test") do |app|
   end
 end
 ```
+
+Note:
+does not send job via encryption - simply encoded64
 
 ## Contributing
 
