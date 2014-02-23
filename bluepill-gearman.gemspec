@@ -14,6 +14,10 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.add_dependency "bluepill"
   gem.add_dependency "gearman-ruby"
-  gem.add_dependency "crypt"
+  #gem.add_dependency "crypt"
+  gem.add_development_dependency "minitest"
+  gem.add_development_dependency "mocha"
+  gem.add_development_dependency "yard"
+  gem.add_development_dependency "redcarpet"
   gem.version       = Bluepill::Gearman::VERSION
 end
