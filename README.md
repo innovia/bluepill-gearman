@@ -23,7 +23,7 @@ Require the bluepill-gearman gem and add a check named :gearman in your pill con
 Available options are:
 * gearman_server: the gearman server where you want to send your passive checks
 * port: the port where nsca daemon is listening (default: 4730)
-* hostname: the host defined in your nagios configuration (default: hostname -f)
+* host: the host defined in your nagios configuration (default: hostname -f)
 * service: the service name defined in the nagios configuration (default: bluepill configuration process name)
 * queue: the queue name to process the jobs (default: check_results)
 
@@ -36,7 +36,7 @@ Bluepill.application("test") do |app|
     process.start_command = "bundle exec ./test.rb"
     process.pid_file = "/var/run/test.pid"
     process.daemonize = true
-    process.checks :gearman, :gearman_server => 'my.gearman.server'
+    process.checks :send_gearman, :gearman_server => 'my.gearman.server', :host => 'host_in_nagios', :service => 'passive check service name'
   end
 end
 ```
