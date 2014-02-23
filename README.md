@@ -36,7 +36,7 @@ Bluepill.application("test") do |app|
     process.start_command = "bundle exec ./test.rb"
     process.pid_file = "/var/run/test.pid"
     process.daemonize = true
-    process.checks :send_gearman, :gearman_server => 'my.gearman.server', :host => 'host_in_nagios', :service => 'passive check service name'
+    process.checks :send_gearman, :gearman_server => 'my.gearman.server', :host => 'host_in_nagios', :service => 'passive check service name', :notify_on => :unmonitored
   end
 end
 ```

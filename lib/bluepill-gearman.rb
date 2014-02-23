@@ -15,19 +15,15 @@ module Bluepill
           * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
-          * encryption: true/false, default to false
-          * key: A key 16, 24, or 32 bytes length
           See checks https://github.com/arya/bluepill for the syntax to pass those options
       INFO
 
       def initialize(process, options={})
         @default_args = {
-          :gearman_server => ["#{options.delete(:gearman_server)}:#{options.delete(:gearman_port) || 4730}"],
+          :gearman_job_server => ["#{options.delete(:gearman_server)}:#{options.delete(:gearman_port) || 4730}"],
           :host => options.delete(:host) || `hostname -f`.chomp,
           :service => options.delete(:service) || process.name,
-          :queue => options.delete(:queue) || 'check_results',
-          :encryption => options.delete(:encryption) || false,
-          :key => options.delete(:key) || ''
+          :queue => options.delete(:queue) || 'check_results' 
         }
         super
       end
@@ -56,8 +52,8 @@ module Bluepill
     protected
       def send_gearman(args)
         begin
-          client  = Gearman::Client.new(args[:gearman_server])
-          taskset = Gearman::TaskSet.new(client)
+          client  = ::Gearman::Client.new(args[:gearman_job_server])
+          taskset = ::Gearman::TaskSet.new(client)
           job = <<-EOT
 type=passive
 host_name=#{args[:host]}
@@ -78,7 +74,7 @@ EOT
           # end
           logger.debug "sending job: #{job}"
           encoded_job = Base64.encode64(job)
-          task = Gearman::Task.new(args[:queue], encoded_job) 
+          task = ::Gearman::Task.new(args[:queue], encoded_job) 
           result = taskset.add_task(task)
 
           logger.info "Sent Job to Gearman Server: #{result}"
