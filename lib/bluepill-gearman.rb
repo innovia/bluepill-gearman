@@ -66,7 +66,7 @@ EOT
           encoded_job = Base64.encode64(job)
           result = client.do_task(args[:queue], encoded_job) 
 
-          logger.info "Sent Job to Gearman Server"
+          logger.info "Sent Job to Gearman Server:"
           rescue Exception => e
           logger.warn "Failed to send job to the Gearman Server: #{e}"
           end
