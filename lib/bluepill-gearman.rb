@@ -2,7 +2,9 @@ require "bluepill-gearman/version"
 require 'gearman'
 require "bluepill"
 require 'base64'
-
+require "openssl"
+require "digest"
+ 
 module Bluepill
   module Gearman
     class SendGearman < Bluepill::Trigger
@@ -15,7 +17,11 @@ module Bluepill
           * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
+          * key: provide a key for encryption should be 16 or 32 bytes long
+          * encryption: default to false set to true to enable
+
           See checks https://github.com/arya/bluepill for the syntax to pass those options
+          encryption: https://gist.github.com/RiANOl/1077760
       INFO
 
       def initialize(process, options={})
@@ -23,7 +29,9 @@ module Bluepill
           :gearman_job_server => ["#{options.delete(:gearman_server)}:#{options.delete(:gearman_port) || 4730}"],
           :host => options.delete(:host) || `hostname -f`.chomp,
           :service => options.delete(:service) || process.name,
-          :queue => options.delete(:queue) || 'check_results' 
+          :queue => options.delete(:queue) || 'check_results',
+          :key => options.delete(:key) || '',
+          :encryption => options.delete(:encryption) || false 
         }
         super
       end
@@ -63,14 +71,36 @@ latency=0.0
 return_code=#{args[:return_code]}
 output=#{args[:status]}
 EOT
+          if args[:encryption]
+            begin
+              job = encrypt(args[:key], job)
+            rescue Exception => e
+              logger.warn "unable to encrypt: #{e}"
+            end
+          end
           encoded_job = Base64.encode64(job)
           result = client.do_task(args[:queue], encoded_job) 
 
           logger.info "Sent Job to Gearman Server:"
-          rescue Exception => e
+        rescue Exception => e
           logger.warn "Failed to send job to the Gearman Server: #{e}"
-          end
-      end 
+        end
+      end
+
+      def encrypt(key, data)
+        if(key.kind_of?(String) && 16 != key.bytesize)
+          key = Digest::MD5.digest(key) 
+          cipher = 'AES-128-CBC'
+        elsif(key.kind_of?(String) && 32 != key.bytesize)
+          key = Digest::SHA256.digest(key) 
+          cipher = 'AES-256-CBC'
+        end
+
+        aes = OpenSSL::Cipher.new(cipher)
+        aes.encrypt
+        aes.key = key
+        aes.update(data) + aes.final
+      end
     end
   end
 end
