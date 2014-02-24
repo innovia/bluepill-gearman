@@ -53,7 +53,6 @@ module Bluepill
       def send_gearman(args)
         begin
           client  = ::Gearman::Client.new(args[:gearman_job_server])
-          taskset = ::Gearman::TaskSet.new(client)
           job = <<-EOT
 type=passive
 host_name=#{args[:host]}
@@ -64,20 +63,10 @@ latency=0.0
 return_code=#{args[:return_code]}
 output=#{args[:status]}
 EOT
-          # if args[:encryption]
-          #   begin
-          #     rijndael = Crypt::Rijndael.new(args[:key])
-          #     job = rijndael.encrypt_block(job)
-          #   rescue Exception => e
-          #     logger.debug("unable to encrypt job: #{e}")
-          #   end
-          # end
-          logger.debug "sending job: #{job}"
           encoded_job = Base64.encode64(job)
-          task = ::Gearman::Task.new(args[:queue], encoded_job) 
-          result = taskset.add_task(task)
+          result = client.do_task(args[:queue], encoded_job) 
 
-          logger.info "Sent Job to Gearman Server: #{result}"
+          logger.info "Sent Job to Gearman Server"
           rescue Exception => e
           logger.warn "Failed to send job to the Gearman Server: #{e}"
           end
