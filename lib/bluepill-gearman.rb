@@ -17,7 +17,7 @@ module Bluepill
           * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
-          * key: provide a key for encryption should be 16 or 32 bytes long
+          * key: provide a key for encryption should be 32 bytes long
           * encryption: default to false set to true to enable
 
           See checks https://github.com/arya/bluepill for the syntax to pass those options
@@ -73,7 +73,7 @@ output=#{args[:status]}
 EOT
           if args[:encryption]
             begin
-              job = encrypt(args[:key], job)
+              job = aes256_encrypt(args[:key], job)
             rescue Exception => e
               logger.warn "unable to encrypt: #{e}"
             end
@@ -87,16 +87,9 @@ EOT
         end
       end
 
-      def encrypt(key, data)
-        if(key.kind_of?(String) && 16 != key.bytesize)
-          key = Digest::MD5.digest(key) 
-          cipher = 'AES-128-CBC'
-        elsif(key.kind_of?(String) && 32 != key.bytesize)
-          key = Digest::SHA256.digest(key) 
-          cipher = 'AES-256-CBC'
-        end
-
-        aes = OpenSSL::Cipher.new(cipher)
+      def aes256_encrypt(key, data)
+        key = Digest::SHA256.digest(key) if(key.kind_of?(String) && 32 != key.bytesize)
+        aes = OpenSSL::Cipher.new('AES-256-CBC')
         aes.encrypt
         aes.key = key
         aes.update(data) + aes.final
