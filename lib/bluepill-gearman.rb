@@ -17,7 +17,7 @@ module Bluepill
           * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
-          * key: provide a key for encryption should be 32 bytes long
+          * key: provide a key for encryption - if length does not meet 32 bytes it will digest the key with SHA256 
           * encryption: default to false set to true to enable
 
           See checks https://github.com/arya/bluepill for the syntax to pass those options
@@ -58,6 +58,14 @@ module Bluepill
       end
 
     protected
+      def aes256_encrypt(key, data)
+        key = Digest::SHA256.digest(key) if(key.kind_of?(String) && 32 != key.bytesize)
+        aes = OpenSSL::Cipher.new('AES-256-CBC')
+        aes.encrypt
+        aes.key = key
+        aes.update(data) + aes.final
+      end
+
       def send_gearman(args)
         begin
           client  = ::Gearman::Client.new(args[:gearman_job_server])
@@ -85,14 +93,6 @@ EOT
         rescue Exception => e
           logger.warn "Failed to send job to the Gearman Server: #{e}"
         end
-      end
-
-      def aes256_encrypt(key, data)
-        key = Digest::SHA256.digest(key) if(key.kind_of?(String) && 32 != key.bytesize)
-        aes = OpenSSL::Cipher.new('AES-256-CBC')
-        aes.encrypt
-        aes.key = key
-        aes.update(data) + aes.final
       end
     end
   end
