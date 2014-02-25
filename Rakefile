@@ -12,3 +12,6 @@ end
 YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb']
 end
+
+desc "Run Tests"
+task :default => :test
