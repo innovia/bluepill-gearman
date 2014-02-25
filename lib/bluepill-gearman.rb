@@ -14,11 +14,12 @@ module Bluepill
         @param [Hash] options available options:
           * gearman_server: the Gearman Server. mandatory
           * gearman_port: the gearman server port or default to 4730
-          * hostname: the host defined in nagios to be hosting the service (default: hostname -f)
+          * host: the host defined in nagios to be hosting the service (default: hostname -f)
           * service: the service declared in nagios (default: the bluepill process name)
           * queue: default queue is 'check_results'
-          * key: provide a key for encryption - if length does not meet 32 bytes it will digest the key with SHA256 
+          * key: provide a key for encryption (minimum 8 bytes)
           * encryption: default to false set to true to enable
+          * every: how often the send_gearman will send the passive check
 
           See checks https://github.com/arya/bluepill for the syntax to pass those options
           encryption: https://gist.github.com/RiANOl/1077760
@@ -31,7 +32,8 @@ module Bluepill
           :service => options.delete(:service) || process.name,
           :queue => options.delete(:queue) || 'check_results',
           :key => options.delete(:key) || '',
-          :encryption => options.delete(:encryption) || false 
+          :encryption => options.delete(:encryption) || false,
+          :every  => options.delete(:every) || 1.minute
         }
         super
       end
@@ -94,7 +96,9 @@ EOT
           encoded_job = Base64.encode64(job)
           result = client.do_task(args[:queue], encoded_job) 
 
-          logger.info "Sent Job to Gearman Server:"
+          logger.info "Sent Job to Gearman Server #{result}"
+          logger.info "Next job status passive check: #{args[:every]}"
+          sleep(args[:every]) 
         rescue Exception => e
           logger.warn "Failed to send job to the Gearman Server: #{e}"
         end

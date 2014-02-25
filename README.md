@@ -1,6 +1,6 @@
 # Bluepill::Gearman
 
-Send bluepill events to gearman server via send gearman
+Send bluepill events(passive checks) to gearman server via send gearman
 
 ## Installation
 
@@ -18,14 +18,19 @@ Or install it yourself as:
 
 ## Usage
 
-Require the bluepill-gearman gem and add a check named :gearman in your pill configuration file.
+Require the bluepill-gearman gem and add a check named :send_gearman in your pill configuration file.
 
 Available options are:
-* gearman_server: the gearman server where you want to send your passive checks
-* port: the port where nsca daemon is listening (default: 4730)
-* host: the host defined in your nagios configuration (default: hostname -f)
-* service: the service name defined in the nagios configuration (default: bluepill configuration process name)
-* queue: the queue name to process the jobs (default: check_results)
+  * gearman_server: the Gearman Server. mandatory
+  * gearman_port: the gearman server port or default to 4730
+  * host: the host defined in nagios to be hosting the service (default: hostname -f)
+  * service: the service declared in nagios (default: the bluepill process name)
+  * queue: default queue is 'check_results'
+  * key: provide a key for encryption (minimum 8 bytes)
+  * encryption: default to false, set to true to enable - must provide a key
+  * every: how often the send_gearman will send the passive check (default to 1.minute)
+
+add :notify_on => :unmonitored to make bluepill send notification when unmonitored
 
 Example:
 
@@ -36,13 +41,11 @@ Bluepill.application("test") do |app|
     process.start_command = "bundle exec ./test.rb"
     process.pid_file = "/var/run/test.pid"
     process.daemonize = true
-    process.checks :send_gearman, :gearman_server => 'my.gearman.server', :host => 'host_in_nagios', :service => 'passive check service name', :notify_on => :unmonitored
+    process.checks :send_gearman, :gearman_server => 'my.gearman.server', :host => 'host_in_nagios', :service => 'passive check service name', :notify_on => :unmonitored, :every => 1.minute
   end
 end
 ```
 
-Note:
-does not send job via encryption - simply encoded64
 
 ## Contributing
 
