@@ -59,11 +59,16 @@ module Bluepill
 
     protected
       def aes256_encrypt(key, data)
-        key = Digest::SHA256.digest(key) if(key.kind_of?(String) && 32 != key.bytesize)
-        aes = OpenSSL::Cipher.new('AES-256-CBC')
+        key = null_padding(key)
+        aes = OpenSSL::Cipher.new('AES-256-ECB')
         aes.encrypt
         aes.key = key
         aes.update(data) + aes.final
+      end
+
+      def null_padding(key)
+        padding = (32 - key.bytesize) if(key.kind_of?(String) && 32 != key.bytesize)
+        key += "\0" * padding
       end
 
       def send_gearman(args)
