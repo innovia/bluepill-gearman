@@ -34,7 +34,7 @@ add :notify_on => :unmonitored to make bluepill send notification when unmonitor
 
 Example:
 
-```
+```ruby
 require 'bluepill-gearman'
 Bluepill.application("test") do |app|
   app.process("test") do |process|
